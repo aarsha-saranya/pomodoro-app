@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import Timer from "./components/Timer";
 import TaskList from "./components/TaskList";
+import Statistics from "./components/Statistics";
 
 function App() {
   const [darkMode, setDarkMode] = useState(() => {
@@ -8,9 +9,18 @@ function App() {
     return savedTheme ? JSON.parse(savedTheme) : true;
   });
 
+  const [tasks, setTasks] = useState(() => {
+    const savedTasks = localStorage.getItem("tasks");
+    return savedTasks ? JSON.parse(savedTasks) : [];
+  });
+
   useEffect(() => {
     localStorage.setItem("darkMode", JSON.stringify(darkMode));
   }, [darkMode]);
+
+  useEffect(() => {
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+  }, [tasks]);
 
   return (
     <div
@@ -37,7 +47,14 @@ function App() {
       </h1>
 
       <Timer darkMode={darkMode} />
-      <TaskList darkMode={darkMode} />
+
+      <Statistics tasks={tasks} />
+
+      <TaskList
+        darkMode={darkMode}
+        tasks={tasks}
+        setTasks={setTasks}
+      />
     </div>
   );
 }

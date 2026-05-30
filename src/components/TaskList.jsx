@@ -1,16 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
-function TaskList({ darkMode }) {
-  const [tasks, setTasks] = useState(() => {
-    const savedTasks = localStorage.getItem("tasks");
-    return savedTasks ? JSON.parse(savedTasks) : [];
-  });
-
+function TaskList({ darkMode, tasks, setTasks }) {
   const [input, setInput] = useState("");
-
-  useEffect(() => {
-    localStorage.setItem("tasks", JSON.stringify(tasks));
-  }, [tasks]);
 
   const addTask = () => {
     if (input.trim() === "") return;
@@ -19,6 +10,8 @@ function TaskList({ darkMode }) {
       id: Date.now(),
       text: input,
       completed: false,
+      completedPomodoros: 0,
+      targetPomodoros: 4,
     };
 
     setTasks([...tasks, newTask]);
@@ -32,6 +25,30 @@ function TaskList({ darkMode }) {
           ? { ...task, completed: !task.completed }
           : task
       )
+    );
+  };
+
+  const incrementPomodoro = (id) => {
+    setTasks(
+      tasks.map((task) => {
+        if (task.id === id) {
+          const newCount = Math.min(
+            task.completedPomodoros + 1,
+            task.targetPomodoros
+          );
+
+          return {
+            ...task,
+            completedPomodoros: newCount,
+            completed:
+              newCount === task.targetPomodoros
+                ? true
+                : task.completed,
+          };
+        }
+
+        return task;
+      })
     );
   };
 
@@ -68,42 +85,89 @@ function TaskList({ darkMode }) {
         </button>
       </div>
 
-      <ul className="space-y-2">
+      <ul className="space-y-3">
         {tasks.map((task) => (
           <li
             key={task.id}
-            className={`px-4 py-2 rounded-lg flex justify-between items-center ${
+            className={`p-4 rounded-lg ${
               darkMode
                 ? "bg-gray-700 text-white"
                 : "bg-gray-200 text-black"
             }`}
           >
-            <div className="flex items-center gap-3">
+            <div className="flex items-start gap-3">
               <input
                 type="checkbox"
                 checked={task.completed}
                 onChange={() => toggleTask(task.id)}
+                className="mt-1"
               />
 
-              <span
-  className={`${
-    task.completed
-      ? "line-through opacity-50"
-      : ""
-  } ${
-    darkMode ? "text-white" : "text-black"
-  }`}
->
-                {task.text}
-              </span>
-            </div>
+              <div className="flex-1">
+                <p
+                  className={
+                    task.completed
+                      ? "line-through opacity-50"
+                      : ""
+                  }
+                >
+                  {task.text}
+                </p>
 
-            <button
-              onClick={() => deleteTask(task.id)}
-              className="bg-red-500 px-3 py-1 rounded-lg text-white"
-            >
-              Delete
-            </button>
+                <div className="mt-2">
+                  <p className="text-sm">
+                    🍅 {task.completedPomodoros} /{" "}
+                    {task.targetPomodoros}
+
+                    {task.completedPomodoros ===
+                      task.targetPomodoros && (
+                      <span className="ml-2 bg-green-500 text-white px-2 py-1 rounded text-xs">
+                        ✅ Goal Reached
+                      </span>
+                    )}
+                  </p>
+
+                  {/* Progress Bar */}
+                  <div className="w-full bg-gray-400 rounded-full h-4 mt-2">
+                    <div
+                      className={`h-4 rounded-full transition-all duration-500 ${
+                        task.completedPomodoros ===
+                        task.targetPomodoros
+                          ? "bg-green-500"
+                          : "bg-blue-500"
+                      }`}
+                      style={{
+                        width: `${
+                          (task.completedPomodoros /
+                            task.targetPomodoros) *
+                          100
+                        }%`,
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-2 mt-3">
+                  <button
+                    onClick={() =>
+                      incrementPomodoro(task.id)
+                    }
+                    className="bg-green-500 px-3 py-1 rounded text-white"
+                  >
+                    +1 🍅
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      deleteTask(task.id)
+                    }
+                    className="bg-red-500 px-3 py-1 rounded text-white"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
           </li>
         ))}
       </ul>

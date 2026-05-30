@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
+import alarm from "../assets/alarm.mp3";
 
 function Timer({ darkMode }) {
-  const [seconds, setSeconds] = useState(1500);
+  const [seconds, setSeconds] = useState(10);
   const [isRunning, setIsRunning] = useState(false);
   const [mode, setMode] = useState("focus");
 
@@ -15,6 +16,23 @@ function Timer({ darkMode }) {
             return prev - 1;
           } else {
             setIsRunning(false);
+
+            const audio = new Audio(alarm);
+            audio.play();
+
+            if (Notification.permission === "granted") {
+              new Notification(
+                mode === "focus"
+                  ? "Focus Session Complete!"
+                  : "Break Complete!",
+                {
+                  body:
+                    mode === "focus"
+                      ? "Time for a break."
+                      : "Time to focus again.",
+                }
+              );
+            }
 
             if (mode === "focus") {
               setMode("break");
@@ -49,6 +67,10 @@ function Timer({ darkMode }) {
     setIsRunning(false);
   };
 
+  const enableNotifications = () => {
+    Notification.requestPermission();
+  };
+
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = seconds % 60;
 
@@ -77,6 +99,13 @@ function Timer({ darkMode }) {
       >
         {minutes}:{remainingSeconds.toString().padStart(2, "0")}
       </h1>
+
+      <button
+        onClick={enableNotifications}
+        className="bg-blue-500 px-4 py-2 rounded-lg text-white mb-4"
+      >
+        Enable Notifications
+      </button>
 
       <div className="space-x-4">
         <button
